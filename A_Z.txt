@@ -1,0 +1,480 @@
+Exercise 1: Working with Widgets and Layouts
+
+import 'package:flutter/material.dart';
+
+void main() => runApp(MyApp());
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(title: Text('Welcome App')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Welcome to Flutter!',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 20),
+              Image.network(
+                'https://upload.wikimedia.org/wikipedia/commons/1/17/Google-flutter-logo.png',
+                width: 150,
+                errorBuilder: (context, error, stackTrace) => Icon(Icons.error, size: 150),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Get Started!')),
+                ),
+                child: Text('Get Started'),
+              ),
+            ],
+          ),
+        ),
+      ),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+
+Exercise 2: Working with Customized ListView
+
+
+import 'package:flutter/material.dart';
+
+void main() => runApp(MaterialApp(home: ProductList()));
+
+class Product {
+  final String name;
+  final double price;
+  Product(this.name, this.price);
+}
+
+class ProductList extends StatelessWidget {
+  final List<Product> products = [
+    Product('Laptop', 100000),
+    Product('Phone', 60000),
+    Product('Tablet', 40000),
+    Product('Smart TV', 50000),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Product List')),
+      body: ListView.builder(
+        itemCount: products.length,
+        padding: EdgeInsets.all(16),
+        itemBuilder: (context, index) {
+          final p = products[index];
+          return Card(
+            elevation: 4,
+            margin: EdgeInsets.only(bottom: 8),
+            child: ListTile(
+              leading: Icon(Icons.shopping_bag, color: Colors.blue),
+              title: Text(p.name, style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text('High-quality item'),
+              trailing: Chip(
+                label: Text('₹${p.price.toStringAsFixed(0)}'),
+                backgroundColor: Colors.green,
+              ),
+              onTap: () => showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text(p.name),
+                  content: Text('Price: ₹${p.price.toStringAsFixed(0)}'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context), child: Text('Close')),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+
+
+Exercise 3: Dynamic ListView using ListView.builder
+
+
+import 'package:flutter/material.dart';
+
+void main() => runApp(MaterialApp(home: DynamicProductList()));
+
+class Product {
+  final String name;
+  final double price;
+  Product(this.name, this.price);
+}
+
+class DynamicProductList extends StatefulWidget {
+  @override
+  _DynamicProductListState createState() => _DynamicProductListState();
+}
+
+class _DynamicProductListState extends State<DynamicProductList> {
+  List<Product> _products = [
+    Product('Laptop', 100000),
+    Product('Phone', 60000),
+  ];
+  double _total = 160000;
+
+  void _addProduct() {
+    setState(() {
+      _products.add(Product('New Item', 50000));
+      _total += 50000;
+    });
+  }
+
+  void _removeProduct(int index) {
+    setState(() {
+      _total -= _products[index].price;
+      _products.removeAt(index);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Dynamic Product List')),
+      body: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('Total: ₹${_total.toStringAsFixed(0)}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _products.length,
+              itemBuilder: (context, index) {
+                final p = _products[index];
+                return Dismissible(
+                  key: Key(p.name),
+                  onDismissed: (_) => _removeProduct(index),
+                  background: Container(color: Colors.red, child: Icon(Icons.delete)),
+                  child: Card(
+                    child: ListTile(
+                      title: Text(p.name),
+                      subtitle: Text('Price: ₹${p.price.toStringAsFixed(0)}'),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addProduct,
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+
+
+Exercise 4: Add Interactivity to App - Input and Forms (Stateful Widget)
+
+
+import 'package:flutter/material.dart';
+
+void main() => runApp(MaterialApp(home: BMICalculator()));
+
+class BMICalculator extends StatefulWidget {
+  @override
+  State<BMICalculator> createState() => _BMICalculatorState();
+}
+
+class _BMICalculatorState extends State<BMICalculator> {
+  final _formKey = GlobalKey<FormState>();
+  final w = TextEditingController();
+  final h = TextEditingController();
+  String res = "";
+  Color resColor = Colors.black;
+
+  void calcBMI() {
+    if (_formKey.currentState!.validate()) {
+      double? weight = double.tryParse(w.text);
+      double? height = double.tryParse(h.text);
+      if (weight != null && height != null && height > 0) {
+        double bmi = weight / ((height / 100) * (height / 100));
+        String status = "";
+        resColor = Colors.green;
+        if (bmi < 18.5) {
+          status = "Underweight";
+          resColor = Colors.orange;
+        } else if (bmi < 25) {
+          status = "Normal";
+        } else if (bmi < 30) {
+          status = "Overweight";
+          resColor = Colors.orange;
+        } else {
+          status = "Obese";
+          resColor = Colors.red;
+        }
+        setState(() {
+          res = "BMI = ${bmi.toStringAsFixed(2)} ($status)";
+        });
+      } else {
+        setState(() {
+          res = "Enter valid numbers";
+          resColor = Colors.red;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("BMI Calculator")),
+      body: Padding(
+        padding: EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: w,
+                decoration: InputDecoration(labelText: "Weight (kg)"),
+                keyboardType: TextInputType.number,
+                validator: (value) => (value == null || double.tryParse(value) == null) ? 'Enter valid weight' : null,
+              ),
+              TextFormField(
+                controller: h,
+                decoration: InputDecoration(labelText: "Height (cm)"),
+                keyboardType: TextInputType.number,
+                validator: (value) => (value == null || double.tryParse(value) == null) ? 'Enter valid height' : null,
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(onPressed: calcBMI, child: Text("Calculate")),
+              SizedBox(height: 20),
+              Text(res, style: TextStyle(fontSize: 18, color: resColor)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    w.dispose();
+    h.dispose();
+    super.dispose();
+  }
+}
+
+
+
+
+Exercise 5: Implementation of Navigation and Routing
+
+
+main.dart:
+
+
+import 'package:flutter/material.dart';
+import 'student_details_screen.dart';
+import 'student_result_screen.dart';
+import 'student_data_model.dart'; // Assuming Student class is here
+
+void main() {
+  runApp(MaterialApp(
+    title: 'Student Mark Calculation',
+    initialRoute: '/',
+    routes: {
+      '/': (context) => StudentDetailsScreen(),
+      '/result': (context) => StudentResultScreen(),
+    },
+  ));
+}
+
+
+
+student_data_model.dart:
+
+
+class Student {
+  final String name;
+  final int regNo;
+  final int mark1;
+  final int mark2;
+  final int mark3;
+  Student({
+    required this.name,
+    required this.regNo,
+    required this.mark1,
+    required this.mark2,
+    required this.mark3,
+  });
+}
+student_details_screen.dart:
+
+
+import 'package:flutter/material.dart';
+import 'student_data_model.dart';
+import 'student_result_screen.dart';
+
+class StudentDetailsScreen extends StatefulWidget {
+  @override
+  _StudentDetailsScreenState createState() => _StudentDetailsScreenState();
+}
+
+class _StudentDetailsScreenState extends State<StudentDetailsScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final nameController = TextEditingController();
+  final regNoController = TextEditingController();
+  final mark1Controller = TextEditingController();
+  final mark2Controller = TextEditingController();
+  final mark3Controller = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Student Details Screen'),
+        backgroundColor: Colors.amberAccent,
+      ),
+      body: Container(
+        padding: EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                buildTextFormField("Enter your name", nameController),
+                SizedBox(height: 20),
+                buildTextFormField("Enter Register Number", regNoController, isNumber: true),
+                SizedBox(height: 20),
+                buildTextFormField("Enter Mark 1 (0-100)", mark1Controller, isNumber: true),
+                SizedBox(height: 20),
+                buildTextFormField("Enter Mark 2 (0-100)", mark2Controller, isNumber: true),
+                SizedBox(height: 20),
+                buildTextFormField("Enter Mark 3 (0-100)", mark3Controller, isNumber: true),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.deepPurple,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text('Submit Details'),
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      final student = Student(
+                        name: nameController.text,
+                        regNo: int.parse(regNoController.text),
+                        mark1: int.parse(mark1Controller.text),
+                        mark2: int.parse(mark2Controller.text),
+                        mark3: int.parse(mark3Controller.text),
+                      );
+                      Navigator.pushNamed(context, '/result', arguments: student);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildTextFormField(String label, TextEditingController controller, {bool isNumber = false}) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) return 'Enter $label';
+        if (isNumber) {
+          final num = int.tryParse(value);
+          if (num == null || num < 0 || num > 100) return 'Enter valid number (0-100)';
+        }
+        return null;
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    regNoController.dispose();
+    mark1Controller.dispose();
+    mark2Controller.dispose();
+    mark3Controller.dispose();
+    super.dispose();
+  }
+}
+student_result_screen.dart:
+
+
+import 'package:flutter/material.dart';
+import 'student_data_model.dart';
+
+class StudentResultScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final student = ModalRoute.of(context)!.settings.arguments as Student;
+    final totalMarks = student.mark1 + student.mark2 + student.mark3;
+    final average = totalMarks / 3;
+    final percentage = (totalMarks / 300) * 100;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Student Result Screen'),
+        backgroundColor: Colors.amberAccent,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Container(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Card(
+              elevation: 5,
+              margin: EdgeInsets.all(10),
+              child: ListTile(
+                leading: Icon(Icons.person),
+                title: Text("Name: ${student.name}"),
+                subtitle: Text("Register Number: ${student.regNo}"),
+              ),
+            ),
+            Card(
+              elevation: 5,
+              margin: EdgeInsets.all(10),
+              child: ListTile(
+                leading: Icon(Icons.book),
+                title: Text("Marks Scored"),
+                subtitle: Text("${student.mark1}, ${student.mark2}, ${student.mark3}"),
+              ),
+            ),
+            Card(
+              elevation: 5,
+              margin: EdgeInsets.all(10),
+              child: ListTile(
+                leading: Icon(Icons.calculate),
+                title: Text("Total: $totalMarks"),
+                subtitle: Text("Average: ${average.toStringAsFixed(2)}"),
+                trailing: Text("${percentage.toStringAsFixed(2)}%"),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
